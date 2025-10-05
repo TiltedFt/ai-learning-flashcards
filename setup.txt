@@ -1,0 +1,14 @@
+docker compose build --no-cache
+
+docker compose up -d
+
+docker compose logs db | sed -n '1,200p'
+
+
+npx prisma format
+npx prisma migrate dev --name init
+npx prisma generate
+
+
+docker compose exec db psql -U postgres -d postgres -c "\du"
+docker compose exec db psql -U postgres -d flashcards -c "\dx"
