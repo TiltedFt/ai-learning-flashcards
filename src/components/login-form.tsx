@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { FieldErrors, FormProvider, useForm } from "react-hook-form";
-import { LoginSchema } from "@/contracts/auth";
+import { LoginSchema } from "@/contracts/auth-schema";
 import { ErrorMessage } from "@hookform/error-message";
 import { TxtInput } from "./txt-input-field";
 
