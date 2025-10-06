@@ -4,8 +4,8 @@ export type BookRow = { id: string; title: string };
 
 export interface CreateBook {
   title: string;
-  author?: string;
-  fileUrl: string;
+  author: string | null | undefined;
+  fileUrl?: string;
   userId: string;
 }
 
@@ -52,5 +52,18 @@ export const bookRepository = {
       total,
       pages: Math.max(1, Math.ceil(total / take)),
     };
+  },
+
+  updatePath: async (id: string, path: string) => {
+    return await prisma.$transaction([
+      prisma.book.update({
+        where: {
+          id: id,
+        },
+        data: {
+          fileUrl: path,
+        },
+      }),
+    ]);
   },
 };

@@ -25,7 +25,7 @@ model Book {
   userId    String
   title     String
   author    String?
-  fileUrl   String
+  fileUrl   String?
   createdAt DateTime  @default(now())
   chapters  Chapter[]
   user      User      @relation(fields: [userId], references: [id])

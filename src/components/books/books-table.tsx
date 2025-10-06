@@ -37,7 +37,6 @@ export function BooksTable({ items }: { items: BookItem[] }) {
             {items.map((b) => (
               <TableRow key={b.id}>
                 <TableCell className="font-medium">
-                  {" "}
                   <span className="block truncate" title={b.title}>
                     {b.title}
                   </span>
