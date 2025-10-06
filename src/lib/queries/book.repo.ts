@@ -9,6 +9,13 @@ export interface CreateBook {
   userId: string;
 }
 
+export type ChapterCreate = {
+  title: string;
+  order: number;
+  pageStart: number;
+  pageEnd: number;
+};
+
 export interface BookPaginateParams {
   page?: number;
   pageSize?: number;
@@ -122,5 +129,17 @@ export const bookRepository = {
       })),
       stats: { chapters: chapters.length, topics, questions },
     };
+  },
+
+  async hasChapters(bookId: string) {
+    const n = await prisma.chapter.count({ where: { bookId } });
+    return n > 0;
+  },
+
+  async bulkCreateChapters(bookId: string, items: ChapterCreate[]) {
+    if (!items.length) return 0;
+    const data = items.map((x) => ({ bookId, ...x }));
+    const res = await prisma.chapter.createMany({ data, skipDuplicates: true });
+    return res.count;
   },
 };
