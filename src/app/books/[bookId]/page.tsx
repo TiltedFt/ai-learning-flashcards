@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { Breadcrumbs } from "@/components/nav/breadcrumbs";
-import { ChaptersClient } from "@/components/books/chapters-client";
+import { prisma } from "@/shared/lib/db";
+import { Breadcrumbs } from "@/shared/ui";
+import { ChaptersClient } from "@/features/book-management";
 
 export default async function BookPage({
   params,

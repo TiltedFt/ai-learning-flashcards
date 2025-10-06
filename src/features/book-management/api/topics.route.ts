@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from "next/server";
+import { UnauthorizedError, ValidationError } from "@/shared/lib/errors";
+import { CreateTopicSchema } from "@/entities/topic";
+import { TopicRepository } from "@/core/repositories/topic.repo";
+import { withErrorHandler } from "@/shared/api/api-handler";
+import { getSession } from "@/core/services/auth.service";
+
+export const POST = withErrorHandler(
+  async (req: NextRequest, context?: { params: { chapterId: string } }) => {
+    const session = await getSession();
+    if (!session) throw new UnauthorizedError();
+
+    const params = await context?.params;
+    if (!params?.chapterId) {
+      throw new ValidationError("Missing bookid");
+    }
+
+    const body = await req.json();
+    const parsed = CreateTopicSchema.parse(body);
+
+    const created = await TopicRepository.createTopic(params.chapterId, parsed);
+    return NextResponse.json(created, { status: 201 });
+  }
+);
+
+export const GET = withErrorHandler(
+  async (_req: NextRequest, context?: { params: { chapterId: string } }) => {
+    const session = await getSession();
+    if (!session) throw new UnauthorizedError();
+
+    const params = await context?.params;
+    if (!params?.chapterId) {
+      throw new ValidationError("Missing bookid");
+    }
+
+    const items = await TopicRepository.listTopics(params.chapterId);
+    return NextResponse.json(items);
+  }
+);

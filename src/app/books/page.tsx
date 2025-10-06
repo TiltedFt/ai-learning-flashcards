@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { BooksTable } from "@/components/books/books-table";
-import { getMyPaginatedBooks } from "@/services/books.service";
+import { Button } from "@/shared/ui/components/button";
+import { BooksTable } from "@/widgets/books-table";
+import { getMyPaginatedBooks } from "@/core/services/books.service";
 import { unstable_noStore as noStore } from "next/cache";
-import AutoPageSize from "./auto-page-size";
-import CreateBookDialog from "@/components/books/create-book-dialog";
+import { AutoPageSize } from "@/widgets/pagination";
+import { CreateBookDialog } from "@/features/book-management";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

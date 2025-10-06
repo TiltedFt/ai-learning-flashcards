@@ -1,7 +1,7 @@
 // src/app/login/page.tsx
 "use client";
 
-import { LoginForm } from "@/components/login-form";
+import { LoginForm } from "@/features/auth";
 
 export default function LoginPage() {
   return (

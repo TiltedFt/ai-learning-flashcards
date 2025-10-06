@@ -1,4 +1,4 @@
-import QuizRunner from "./QuizRunner";
+import { QuizRunner } from "@/features/quiz-practice";
 
 export default async function PracticePage(props: {
   params: Promise<{

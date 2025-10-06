@@ -1,7 +1,7 @@
-import TopicsTable from "@/components/books/topics-table";
-import { Breadcrumbs } from "@/components/nav/breadcrumbs";
-import { prisma } from "@/lib/db";
-import { TopicRepository } from "@/lib/queries/topic.repo";
+import { TopicsTable } from "@/features/book-management";
+import { Breadcrumbs } from "@/shared/ui";
+import { prisma } from "@/shared/lib/db";
+import { TopicRepository } from "@/core/repositories/topic.repo";
 
 export default async function ChapterPage({
   params,
