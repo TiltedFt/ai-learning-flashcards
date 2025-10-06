@@ -1,37 +1,26 @@
+import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/nav/breadcrumbs";
-import { getMyBookSummary } from "@/services/books.service";
-import Link from "next/link";
+import { ChaptersClient } from "@/components/books/chapters-client";
 
 export default async function BookPage({
   params,
 }: {
   params: { bookId: string };
 }) {
-  const data = await getMyBookSummary((await params).bookId);
+  const { bookId } = await params;
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: { id: true, title: true },
+  });
+  if (!book) return null;
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-4">
+    <main className="mx-auto w-full max-w-5xl px-4 py-4">
       <Breadcrumbs
-        items={[{ href: "/books", label: "Books" }, { label: data.book.title }]}
+        items={[{ href: "/books", label: "Books" }, { label: book.title }]}
       />
-      <h1 className="text-xl font-semibold mb-2">{data.book.title}</h1>
-      <ul className="space-y-2">
-        {data.chapters.map((c) => (
-          <li key={c.id} className="rounded border p-3 flex justify-between">
-            <div>
-              <div className="font-medium">{c.title}</div>
-              <div className="text-xs text-muted-foreground">
-                pages {c.pageStart}–{c.pageEnd} • topics {c.topicCount}
-              </div>
-            </div>
-            <Link
-              className="underline"
-              href={`/books/${data.book.id}/chapters/${c.id}`}
-            >
-              toTopics
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <h1 className="text-2xl font-semibold mb-4">{book.title}</h1>
+      <ChaptersClient bookId={book.id} bookTitle={book.title} />
     </main>
   );
 }

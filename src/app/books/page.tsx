@@ -4,6 +4,7 @@ import { BooksTable } from "@/components/books/books-table";
 import { getMyPaginatedBooks } from "@/services/books.service";
 import { unstable_noStore as noStore } from "next/cache";
 import AutoPageSize from "./auto-page-size";
+import CreateBookDialog from "@/components/books/create-book-dialog";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,6 +24,9 @@ export default async function Books({
   return (
     <main className="mx-auto w-full max-w-5xl px-4">
       <AutoPageSize page={page} pageSize={pageSize} />
+      <div className="flex items-center justify-end mt-2">
+        <CreateBookDialog />
+      </div>
 
       <BooksTable items={data.items} />
 
