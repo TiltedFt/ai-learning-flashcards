@@ -18,7 +18,7 @@ export type BookItem = { id: string; title: string; progress?: number };
 
 export function BooksTable({ items }: { items: BookItem[] }) {
   async function onDelete(id: string) {
-    // Заглушка. Можешь заменить на DELETE /api/books/:id
+    // temporary
     toast.success("Book deleted" + id);
   }
 
