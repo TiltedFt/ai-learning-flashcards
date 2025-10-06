@@ -12,5 +12,18 @@ export const SignupSchema = z.object({
   lastName: z.string().min(1, "Last name can not be empty."),
 });
 
+const UsersResponseDataSchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.email(),
+});
+export const SuccessfullAuthorizationSchema = z.object({
+  user: UsersResponseDataSchema,
+});
+
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type SignupInput = z.infer<typeof SignupSchema>;
+export type LoginAndSignupResponse = z.infer<
+  typeof SuccessfullAuthorizationSchema
+>;

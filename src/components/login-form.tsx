@@ -17,11 +17,17 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { FieldErrors, FormProvider, useForm } from "react-hook-form";
-import { LoginSchema } from "@/contracts/auth-schema";
+import {
+  LoginSchema,
+  SuccessfullAuthorizationSchema,
+} from "@/contracts/auth-schema";
 import { ErrorMessage } from "@hookform/error-message";
 import { TxtInput } from "./txt-input-field";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -33,10 +39,36 @@ export function LoginForm() {
 
   const handleLogin = form.handleSubmit(
     async (data) => {
-      console.log(data);
+      try {
+        const r = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+
+        if (r.status !== 200) {
+          if (j.details) toast.error(j.details);
+          else if (j.error) toast.error(j.error);
+          else toast.error("Login failed");
+          return;
+        }
+
+        const parsed = SuccessfullAuthorizationSchema.safeParse(j);
+        if (!parsed.success) {
+          toast.error("Something went wrong. Contact support team.");
+        }
+
+        toast.success("Welcome " + parsed.data?.user.firstName);
+        router.replace("/books");
+      } catch {
+        toast.error("Network error");
+      }
     },
-    (errors) => {
-      console.log(errors);
+    (errs) => {
+      Object.values(errs).forEach(
+        (e: any) => e?.message && toast.error(e.message)
+      );
     }
   );
 
@@ -71,7 +103,7 @@ export function LoginForm() {
                 <Field>
                   <Button type="submit">Login</Button>
                   <FieldDescription className="text-center">
-                    Don't have an account? <Link href="/signup">Sign up</Link>
+                    Don't have an account? <Link href="/sign-up">Sign up</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

@@ -19,9 +19,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { TxtInput } from "./txt-input-field";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // SignupSchema
 export function SignupForm() {
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(SignupSchema),
     defaultValues: {
@@ -31,13 +34,32 @@ export function SignupForm() {
       lastName: "",
     },
   });
-
   const handleSignup = form.handleSubmit(
     async (data) => {
-      console.log(data);
+      try {
+        const r = await fetch("/api/sign-up", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+        console.log(r.status);
+        if (r.status !== 201) {
+          if (j.details) toast.error(j.details);
+          else if (j.error) toast.error(j.error);
+          else toast.error("Signup failed");
+          return;
+        }
+        toast.success("Account created");
+        router.replace("/books");
+      } catch {
+        toast.error("Network error");
+      }
     },
-    (errors) => {
-      console.log(errors);
+    (errs) => {
+      Object.values(errs).forEach(
+        (e: any) => e?.message && toast.error(e.message)
+      );
     }
   );
 
