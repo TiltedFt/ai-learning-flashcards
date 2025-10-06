@@ -28,7 +28,7 @@ CREATE TABLE "Chapter" (
     "id" TEXT NOT NULL,
     "bookId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
+    "order" SERIAL NOT NULL,
     "pageStart" INTEGER NOT NULL,
     "pageEnd" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,7 +41,7 @@ CREATE TABLE "Topic" (
     "id" TEXT NOT NULL,
     "chapterId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
+    "order" SERIAL NOT NULL,
     "pageStart" INTEGER,
     "pageEnd" INTEGER,
 

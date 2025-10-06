@@ -56,6 +56,6 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   await fs.mkdir(userDirAbs, { recursive: true });
   await fs.writeFile(fileAbs, buf);
 
-  await bookRepository.updatePath(created.id, userDirRel);
+  await bookRepository.updatePath(created.id, fileRel);
   return NextResponse.json({ id: created.id }, { status: 201 });
 });

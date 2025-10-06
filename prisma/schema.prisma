@@ -35,7 +35,7 @@ model Chapter {
   id        String    @id @default(uuid())
   bookId    String
   title     String
-  order     Int
+  order     Int       @default(autoincrement()) 
   pageStart Int
   pageEnd   Int
   createdAt DateTime  @default(now())
@@ -53,7 +53,7 @@ model Topic {
   id        String   @id @default(uuid())
   chapterId String
   title     String
-  order     Int
+  order     Int      @default(autoincrement()) 
   pageStart Int?
   pageEnd   Int?
 
