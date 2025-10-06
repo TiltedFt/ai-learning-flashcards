@@ -1,6 +1,3 @@
-import { SignupInput } from "@/contracts/auth-schema";
-import { ConflictError, UnauthorizedError } from "@/lib/errors";
-import { userRepository } from "@/lib/queries/user.repo";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
@@ -38,62 +35,4 @@ export async function getSession(): Promise<Session | null> {
   } catch {
     return null;
   }
-}
-
-export async function signup(input: SignupInput) {
-  const { email, password, firstName, lastName } = input;
-  const exists = await userRepository.findByEmail(email);
-  if (exists) {
-    throw new ConflictError("User with this email exists already.");
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  const user = await userRepository.create({
-    email,
-    passwordHash,
-    firstName,
-    lastName,
-  });
-
-  const token = await signSession({ sub: user.id, email: user.email });
-
-  const c = await cookies();
-
-  c.set(COOKIE, token, sessionCookieOpts);
-
-  return {
-    user: { id: user.id, email: user.email, firstName, lastName },
-  };
-}
-
-export async function login(input: { email: string; password: string }) {
-  const user = await userRepository.findByEmail(input.email);
-
-  if (!user) {
-    throw new UnauthorizedError("Wrong Email or Password.");
-  }
-
-  const match = await bcrypt.compare(input.password, user.passwordHash);
-  if (!match) {
-    throw new UnauthorizedError("Wrong Email or Password.");
-  }
-
-  const token = await signSession({ sub: user.id, email: user.email });
-  const c = await cookies();
-
-  c.set(COOKIE, token, sessionCookieOpts);
-
-  return {
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    id: user.id,
-  };
-}
-
-export async function logout() {
-  const c = await cookies();
-  c.set(COOKIE, "", { ...sessionCookieOpts, maxAge: 0 });
-  return { ok: true as const, status: 200 };
 }
