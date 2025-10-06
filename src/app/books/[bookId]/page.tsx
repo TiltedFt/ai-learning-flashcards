@@ -7,7 +7,7 @@ export default async function BookPage({
 }: {
   params: { bookId: string };
 }) {
-  const data = await getMyBookSummary(params.bookId);
+  const data = await getMyBookSummary((await params).bookId);
   return (
     <main className="mx-auto w-full max-w-5xl px-4">
       <Breadcrumbs

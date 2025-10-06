@@ -9,7 +9,7 @@ export default async function ChapterPage({
 }: {
   params: { bookId: string; chapterId: string };
 }) {
-  const book = await getMyBookSummary(params.bookId);
+  const book = await getMyBookSummary((await params).bookId);
   const chapter = await prisma.chapter.findFirst({
     where: { id: params.chapterId, bookId: params.bookId },
   });
