@@ -51,7 +51,7 @@ export function BooksTable({ items }: { items: BookItem[] }) {
                 </TableCell>
                 <TableCell className="space-x-2">
                   <Button asChild size="sm" variant="secondary">
-                    <Link href={`/books/${b.id}/chapters`}>Practice</Link>
+                    <Link href={`/books/${b.id}`}>Practice</Link>
                   </Button>
                   <Button
                     size="sm"
