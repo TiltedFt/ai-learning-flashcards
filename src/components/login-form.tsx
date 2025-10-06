@@ -61,6 +61,7 @@ export function LoginForm() {
 
         toast.success("Welcome " + parsed.data?.user.firstName);
         router.replace("/books");
+        router.refresh(); 
       } catch {
         toast.error("Network error");
       }

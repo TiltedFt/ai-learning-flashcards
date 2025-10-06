@@ -15,7 +15,6 @@ export async function middleware(req: NextRequest) {
   const path = url.pathname;
   const token = req.cookies.get("session")?.value;
 
-  // Нет токена: пускаем только на public, остальное -> /login
   if (!token) {
     if (isPublic(path)) return NextResponse.next();
     url.pathname = "/login";

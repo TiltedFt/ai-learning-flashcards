@@ -52,6 +52,7 @@ export function SignupForm() {
         }
         toast.success("Account created");
         router.replace("/books");
+        router.refresh();
       } catch {
         toast.error("Network error");
       }
