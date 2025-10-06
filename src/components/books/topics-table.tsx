@@ -12,6 +12,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import Link from "next/link";
 
 type Topic = {
   id: string;
@@ -21,7 +22,13 @@ type Topic = {
   order: number;
 };
 
-export default function TopicsTable({ chapterId }: { chapterId: string }) {
+export default function TopicsTable({
+  chapterId,
+  bookId,
+}: {
+  chapterId: string;
+  bookId: string;
+}) {
   const [topics, setTopics] = useState<Topic[] | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -81,9 +88,11 @@ export default function TopicsTable({ chapterId }: { chapterId: string }) {
                   </TableCell>
                   <TableCell className="flex gap-2">
                     <Button variant="outline" asChild>
-                      <a href={`/books/${chapterId}/topics/${t.id}/practice`}>
+                      <Link
+                        href={`/books/${bookId}/chapters/${chapterId}/topics/${t.id}/practice`}
+                      >
                         To quiz
-                      </a>
+                      </Link>
                     </Button>
                     <Button variant="destructive" disabled>
                       Remove

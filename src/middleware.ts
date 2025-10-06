@@ -33,7 +33,8 @@ export async function middleware(req: NextRequest) {
     path === "/login" ||
     path.startsWith("/login/") ||
     path === "/sign-up" ||
-    path.startsWith("/sign-up/")
+    path.startsWith("/sign-up/") ||
+    path === "/"
   ) {
     url.pathname = "/books";
     return NextResponse.redirect(url);

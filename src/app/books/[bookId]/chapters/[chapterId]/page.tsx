@@ -15,6 +15,7 @@ export default async function ChapterPage({
       book: {
         select: {
           title: true,
+          id: true,
         },
       },
     },
@@ -32,7 +33,7 @@ export default async function ChapterPage({
         ]}
       />
       <h2 className="text-lg font-semibold mb-2">{chapter.title}</h2>
-      <TopicsTable chapterId={chapter.id} />
+      <TopicsTable chapterId={chapter.id} bookId={chapter.book.id} />
     </main>
   );
 }

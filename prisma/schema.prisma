@@ -84,7 +84,6 @@ model Question {
   topicId       String?
   chunkId       String?
   type          String   @default("mcq")
-  difficulty    String?
   bloomLevel    String?
   stem          String
   options       String[] // Postgres array
