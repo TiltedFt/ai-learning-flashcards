@@ -6,7 +6,7 @@ export const CreateBookFormSchema = z.object({
   file: z
     .instanceof(File, { message: "PDF file is required" })
     .refine((f) => f.type === "application/pdf", "Only PDF allowed")
-    .refine((f) => f.size <= 25 * 1024 * 1024, "Max 25MB"),
+    .refine((f) => f.size <= 30 * 1024 * 1024, "Max 30MB"),
 });
 
 export const CreateBookServerSchema = z.object({

@@ -1,5 +1,5 @@
 import { getSession } from "@/services/auth.service";
-import { UnauthorizedError } from "@/lib/errors";
+import { NotFoundError, UnauthorizedError } from "@/lib/errors";
 import { bookRepository } from "@/lib/queries/book.repo";
 
 export async function getMyPaginatedBooks(params: {
@@ -9,4 +9,12 @@ export async function getMyPaginatedBooks(params: {
   const session = await getSession();
   if (!session) throw new UnauthorizedError();
   return bookRepository.paginate({ ...params, userId: session.sub });
+}
+
+export async function getMyBookSummary(bookId: string) {
+  const session = await getSession();
+  if (!session) throw new UnauthorizedError("Unauthorized");
+  const data = await bookRepository.summaryById(bookId, session.sub);
+  if (!data) throw new NotFoundError("Book not found");
+  return data;
 }

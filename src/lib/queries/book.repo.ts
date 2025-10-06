@@ -15,6 +15,21 @@ export interface BookPaginateParams {
   userId: string;
 }
 
+export type ChapterSummary = {
+  id: string;
+  title: string | null;
+  order: number | null;
+  pageStart: number | null;
+  pageEnd: number | null;
+  topicCount: number;
+};
+
+export type BookSummary = {
+  book: { id: string; title: string; author: string | null };
+  chapters: ChapterSummary[];
+  stats: { chapters: number; topics: number; questions: number };
+};
+
 export interface Paginated<T> {
   items: T[];
   page: number;
@@ -65,5 +80,47 @@ export const bookRepository = {
         },
       }),
     ]);
+  },
+
+  async summaryById(
+    bookId: string,
+    userId: string
+  ): Promise<BookSummary | null> {
+    const book = await prisma.book.findFirst({
+      where: { id: bookId, userId },
+      select: { id: true, title: true, author: true },
+    });
+    if (!book) return null;
+
+    const chapters = await prisma.chapter.findMany({
+      where: { bookId },
+      orderBy: [{ order: "asc" }, { pageStart: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        order: true,
+        pageStart: true,
+        pageEnd: true,
+        _count: { select: { topics: true } }, // имя relation: Topics
+      },
+    });
+
+    const topics = await prisma.topic.count({ where: { chapter: { bookId } } });
+    const questions = await prisma.question.count({
+      where: { topic: { chapter: { bookId } } },
+    });
+
+    return {
+      book,
+      chapters: chapters.map((c) => ({
+        id: c.id,
+        title: c.title,
+        order: c.order,
+        pageStart: c.pageStart,
+        pageEnd: c.pageEnd,
+        topicCount: c._count.topics,
+      })),
+      stats: { chapters: chapters.length, topics, questions },
+    };
   },
 };

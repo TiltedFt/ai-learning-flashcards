@@ -38,7 +38,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     throw new ValidationError("PDF file is required");
   if (file.type !== "application/pdf")
     throw new ValidationError("Only PDF allowed");
-  if (file.size > 25 * 1024 * 1024) throw new ValidationError("Max 25MB");
+  if (file.size > 30 * 1024 * 1024) throw new ValidationError("Max 30MB");
 
   const created = await bookRepository.create({
     title: parsed.data.title,

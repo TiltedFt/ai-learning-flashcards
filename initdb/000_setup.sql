@@ -1,4 +1,3 @@
--- суперпользователь postgres уже есть, создаём app и базы
 CREATE ROLE app WITH LOGIN PASSWORD 'app' CREATEDB SUPERUSER;
 
 CREATE DATABASE flashcards OWNER app;

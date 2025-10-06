@@ -8,16 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String     @id @default(uuid())
+  email        String     @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
   firstName    String
   lastName     String
-
-  books      Book[]
-  answers    Answer[]
-  progresses Progress[]
+  answers      Answer[]
+  books        Book[]
+  progresses   Progress[]
 }
 
 model Book {
@@ -26,36 +25,55 @@ model Book {
   title     String
   author    String?
   fileUrl   String?
+  status    String    @default("uploaded")
   createdAt DateTime  @default(now())
-  chapters  Chapter[]
   user      User      @relation(fields: [userId], references: [id])
+  chapters  Chapter[]
 }
 
 model Chapter {
-  id         String     @id @default(uuid())
-  bookId     String
-  idx        Int
-  title      String
-  tokenStart Int?
-  tokenEnd   Int?
-  createdAt  DateTime   @default(now())
-  book       Book       @relation(fields: [bookId], references: [id])
+  id        String    @id @default(uuid())
+  bookId    String
+  title     String
+  order     Int
+  pageStart Int
+  pageEnd   Int
+  createdAt DateTime  @default(now())
+  book      Book      @relation(fields: [bookId], references: [id])
+
   chunks     Chunk[]
-  questions  Question[]
   progresses Progress[]
+  topics     Topic[]
+  questions  Question[] 
+
+  @@index([bookId, order])
+}
+
+model Topic {
+  id        String   @id @default(uuid())
+  chapterId String
+  title     String
+  order     Int
+  pageStart Int?
+  pageEnd   Int?
+
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+  questions Question[]
+
+  @@index([chapterId, order])
 }
 
 model Chunk {
-  id         String                @id @default(uuid())
+  id         String      @id @default(uuid())
   chapterId  String
   idx        Int
   text       String
   tokenCount Int
-  embedding  Unsupported("vector")
+  embedding  Unsupported("vector")? // nullable, чтобы можно было не считать сразу
   sourceLoc  Json?
-  chapter    Chapter               @relation(fields: [chapterId], references: [id])
 
-  questions Question[]
+  chapter    Chapter     @relation(fields: [chapterId], references: [id])
+  questions  Question[]
 
   @@index([chapterId, idx])
 }
@@ -63,22 +81,26 @@ model Chunk {
 model Question {
   id            String   @id @default(uuid())
   chapterId     String
+  topicId       String?
   chunkId       String?
   type          String   @default("mcq")
   difficulty    String?
   bloomLevel    String?
   stem          String
-  options       String[]
+  options       String[] // Postgres array
   correctIndex  Int
   explanation   String?
   provenance    Json?
   modelSnapshot String?
   createdAt     DateTime @default(now())
 
-  chapter Chapter @relation(fields: [chapterId], references: [id])
-  chunk   Chunk?  @relation(fields: [chunkId], references: [id])
+  answers       Answer[]
+  chapter       Chapter  @relation(fields: [chapterId], references: [id])
+  topic         Topic?   @relation(fields: [topicId], references: [id])
+  chunk         Chunk?   @relation(fields: [chunkId], references: [id])
 
-  answers Answer[]
+  @@index([chapterId])
+  @@index([topicId])
 }
 
 model Answer {
@@ -90,8 +112,8 @@ model Answer {
   timeMs      Int?
   createdAt   DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id])
-  question Question @relation(fields: [questionId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
 }
@@ -103,9 +125,17 @@ model Progress {
   correct   Int     @default(0)
   pct       Decimal @default(0)
 
-  user    User    @relation(fields: [userId], references: [id])
-  chapter Chapter @relation(fields: [chapterId], references: [id])
+  chapter   Chapter @relation(fields: [chapterId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 
   @@id([userId, chapterId])
   @@index([chapterId])
+}
+
+model GenCache {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  payload   String
+  tokens    Int
+  createdAt DateTime @default(now())
 }
