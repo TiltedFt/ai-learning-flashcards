@@ -25,9 +25,7 @@ model Book {
   userId    String
   title     String
   author    String?
-  lang      String?
-  fileUrl   String?
-  status    String    @default("uploaded")
+  fileUrl   String
   createdAt DateTime  @default(now())
   chapters  Chapter[]
   user      User      @relation(fields: [userId], references: [id])
