@@ -33,7 +33,7 @@ export default function TopicsTable({
   const [open, setOpen] = useState(false);
 
   async function fetchTopics() {
-    const res = await fetch(`/api/chapters/${chapterId}/topics`);
+    const res = await fetch(`/api/books/${bookId}/chapters/${chapterId}/topics`);
     if (res.ok) {
       const data = await res.json();
       setTopics(data);
@@ -54,6 +54,7 @@ export default function TopicsTable({
             open={open}
             onOpenChange={setOpen}
             chapterId={chapterId}
+            bookId={bookId}
             onCreated={fetchTopics}
           />
         </div>

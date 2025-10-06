@@ -19,11 +19,13 @@ export default function AddTopicDialog({
   open,
   onOpenChange,
   chapterId,
+  bookId,
   onCreated,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   chapterId: string;
+  bookId: string;
   onCreated?: () => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +42,7 @@ export default function AddTopicDialog({
   async function onSubmit(values: CreateTopicInput) {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/chapters/${chapterId}/topics`, {
+      const res = await fetch(`/api/books/${bookId}/chapters/${chapterId}/topics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

@@ -16,9 +16,11 @@ export type Question = {
 type QuizPayload = { questions: Question[] };
 
 export default function QuizRunner({
+  bookId,
   chapterId,
   topicId,
 }: {
+  bookId: string;
   chapterId: string;
   topicId: string;
 }) {
@@ -32,7 +34,7 @@ export default function QuizRunner({
   async function load() {
     setLoading(true);
     const res = await fetch(
-      `/api/chapters/${chapterId}/topics/${topicId}/quiz`,
+      `/api/books/${bookId}/chapters/${chapterId}/topics/${topicId}/quiz`,
       { cache: "no-store" }
     );
     const data = await res.json();

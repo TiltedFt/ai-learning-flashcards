@@ -4,14 +4,10 @@ import { ensureTopicQuestions } from "@/lib/quiz-generation";
 
 export async function GET(
   req: Request,
-  { params }: { params: { chapterId: string; topicId: string } }
+  { params }: { params: Promise<{ chapterId: string; topicId: string }> }
 ) {
   const { chapterId, topicId } = await params;
-  console.log(chapterId, topicId);
-  console.log(chapterId, topicId);
-  console.log(chapterId, topicId);
-  console.log(chapterId, topicId);
-  console.log(chapterId, topicId);
+
   const existing = await prisma.question.findMany({
     where: { chapterId, topicId },
     orderBy: { createdAt: "asc" },

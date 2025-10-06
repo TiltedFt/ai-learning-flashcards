@@ -2,11 +2,12 @@ import QuizRunner from "./QuizRunner";
 
 export default async function PracticePage(props: {
   params: Promise<{
+    bookId: string;
     chapterId: string;
     topicId: string;
   }>;
 }) {
-  const { chapterId, topicId } = await props.params;
+  const { bookId, chapterId, topicId } = await props.params;
 
-  return <QuizRunner chapterId={chapterId} topicId={topicId} />;
+  return <QuizRunner bookId={bookId} chapterId={chapterId} topicId={topicId} />;
 }
