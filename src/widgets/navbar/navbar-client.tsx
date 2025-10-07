@@ -32,7 +32,7 @@ export default function NavbarClient({ fullName }: { fullName: string }) {
     <nav className="w-full border-b bg-background">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         <Link href="/books" className="text-lg font-semibold">
-          FlashcardAI
+          Memora
         </Link>
 
         <div className="flex items-center gap-3">
