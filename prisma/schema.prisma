@@ -14,9 +14,7 @@ model User {
   createdAt    DateTime   @default(now())
   firstName    String
   lastName     String
-  answers      Answer[]
   books        Book[]
-  progresses   Progress[]
 }
 
 model Book {
@@ -41,8 +39,6 @@ model Chapter {
   createdAt DateTime  @default(now())
   book      Book      @relation(fields: [bookId], references: [id])
 
-  chunks     Chunk[]
-  progresses Progress[]
   topics     Topic[]
   questions  Question[] 
 
@@ -63,20 +59,6 @@ model Topic {
   @@index([chapterId, order])
 }
 
-model Chunk {
-  id         String      @id @default(uuid())
-  chapterId  String
-  idx        Int
-  text       String
-  tokenCount Int
-  embedding  Unsupported("vector")? // nullable, чтобы можно было не считать сразу
-  sourceLoc  Json?
-
-  chapter    Chapter     @relation(fields: [chapterId], references: [id])
-  questions  Question[]
-
-  @@index([chapterId, idx])
-}
 
 model Question {
   id            String   @id @default(uuid())
@@ -84,51 +66,19 @@ model Question {
   topicId       String?
   chunkId       String?
   type          String   @default("mcq")
-  bloomLevel    String?
   stem          String
-  options       String[] // Postgres array
+  options       String[] 
   correctIndex  Int
   explanation   String?
   provenance    Json?
   modelSnapshot String?
   createdAt     DateTime @default(now())
 
-  answers       Answer[]
   chapter       Chapter  @relation(fields: [chapterId], references: [id])
   topic         Topic?   @relation(fields: [topicId], references: [id])
-  chunk         Chunk?   @relation(fields: [chunkId], references: [id])
 
   @@index([chapterId])
   @@index([topicId])
-}
-
-model Answer {
-  id          String   @id @default(uuid())
-  userId      String
-  questionId  String
-  chosenIndex Int
-  isCorrect   Boolean
-  timeMs      Int?
-  createdAt   DateTime @default(now())
-
-  question    Question @relation(fields: [questionId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
-
-  @@index([userId, createdAt])
-}
-
-model Progress {
-  userId    String
-  chapterId String
-  answered  Int     @default(0)
-  correct   Int     @default(0)
-  pct       Decimal @default(0)
-
-  chapter   Chapter @relation(fields: [chapterId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
-
-  @@id([userId, chapterId])
-  @@index([chapterId])
 }
 
 model GenCache {

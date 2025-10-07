@@ -5,6 +5,7 @@ import { getMyPaginatedBooks } from "@/core/services/books.service";
 import { unstable_noStore as noStore } from "next/cache";
 import { AutoPageSize } from "@/widgets/pagination";
 import { CreateBookDialog } from "@/features/book-management";
+import { PageContainer, PageHeader } from "@/shared/ui/layout";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,15 +23,18 @@ export default async function Books({
   const data = await getMyPaginatedBooks({ page, pageSize });
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4">
+    <PageContainer as="main" maxWidth="5xl">
       <AutoPageSize page={page} pageSize={pageSize} />
-      <div className="flex items-center justify-end mt-2">
-        <CreateBookDialog />
-      </div>
+
+      <PageHeader
+        title="Books"
+        description="Manage your learning materials and book collections"
+        actions={<CreateBookDialog />}
+      />
 
       <BooksTable items={data.items} />
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-6 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           Page {page} of {data.pages} • {data.total} total
         </span>
@@ -60,6 +64,6 @@ export default async function Books({
           )}
         </div>
       </div>
-    </main>
+    </PageContainer>
   );
 }

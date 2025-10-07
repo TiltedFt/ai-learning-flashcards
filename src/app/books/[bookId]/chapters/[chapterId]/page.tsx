@@ -1,6 +1,7 @@
 import { TopicsTable } from "@/features/book-management";
 import { Breadcrumbs } from "@/shared/ui";
 import { prisma } from "@/shared/lib/db";
+import { PageContainer, PageHeader } from "@/shared/ui/layout";
 
 export default async function ChapterPage({
   params,
@@ -23,16 +24,21 @@ export default async function ChapterPage({
   if (!chapter) throw new Error("Chapter not found");
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4">
-      <Breadcrumbs
-        items={[
-          { href: "/books", label: "Books" },
-          { href: `/books/${params.bookId}`, label: chapter.book.title },
-          { label: chapter.title },
-        ]}
+    <PageContainer as="main" maxWidth="5xl">
+      <PageHeader
+        title={chapter.title}
+        headingLevel={2}
+        breadcrumb={
+          <Breadcrumbs
+            items={[
+              { href: "/books", label: "Books" },
+              { href: `/books/${params.bookId}`, label: chapter.book.title },
+              { label: chapter.title },
+            ]}
+          />
+        }
       />
-      <h2 className="text-lg font-semibold mb-2">{chapter.title}</h2>
       <TopicsTable chapterId={chapter.id} bookId={chapter.book.id} />
-    </main>
+    </PageContainer>
   );
 }

@@ -6,7 +6,31 @@ import { extractPdfRangeText } from "@/core/services/pdf.service";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM = `Return ONLY JSON with {"questions": [{"stem": string, "options": [string,string,string,string], "correctIndex": number, "explanation": string?}]}. No prose.`;
+const prompt = `
+Your role: quiz generator.
 
+You receive: a **topic title** and **source text**.  
+You must output a JSON object with a field questions — array of question.  
+
+Rules:
+
+- Each question object must include:
+  - id: unique identifier (string)  
+  - stem: the question text / prompt  
+  - options: exactly 4 options, each with "{ id, text }"
+  - correctOptionIds: array of IDs (one or more)  
+  - bloomLevel: one of "remember", "understand", "apply", "analyze"
+  - type: the Bloom’s taxonomy type same as bloomLevel  
+  - explanation: optional explanation string  
+  - Question types must vary. Include at least one of each type (if possible): remember, understand, apply, analyze  
+  - Questions should test understanding, not be purely factual recall  
+  - Questions should stay on topic. If two topics are present, focus on the larger one 
+  - Questions should be ONLY related to the topic and text you recieve 
+  - Do not generate abstract questions  
+  - The output must be valid JSON, exactly this structure, no extra prose outside JSON
+
+Return ONLY JSON with {"questions": [{"stem": string, "options": [string,string,string,string], "correctIndex": number, "explanation": string?}]}. No prose.
+`;
 function userPrompt(topic: string, text: string) {
   return `Topic: ${topic}\nSource text:\n"""${text}"""\nRules: 4 options, exactly one correct, non-abstract, test understanding.`;
 }
@@ -24,9 +48,8 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
         select: {
           id: true,
           book: {
-            // ← добавьте связь с Book
             select: {
-              fileUrl: true, // ← получите fileUrl из Book
+              fileUrl: true,
             },
           },
         },

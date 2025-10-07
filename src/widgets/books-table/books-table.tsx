@@ -11,10 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/components/table";
-import { Progress } from "@/shared/ui/components/progress";
 import { toast } from "sonner";
 
-export type BookItem = { id: string; title: string; progress?: number };
+export type BookItem = { id: string; title: string };
 
 export function BooksTable({ items }: { items: BookItem[] }) {
   async function onDelete(id: string) {
@@ -29,7 +28,6 @@ export function BooksTable({ items }: { items: BookItem[] }) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50%]">Title</TableHead>
-              <TableHead className="w-[30%]">Progress</TableHead>
               <TableHead className="w-[20%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -40,14 +38,6 @@ export function BooksTable({ items }: { items: BookItem[] }) {
                   <span className="block truncate" title={b.title}>
                     {b.title}
                   </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Progress value={b.progress ?? 0} className="w-48" />
-                    <span className="text-xs text-muted-foreground">
-                      {Math.round(b.progress ?? 0)}%
-                    </span>
-                  </div>
                 </TableCell>
                 <TableCell className="space-x-2">
                   <Button asChild size="sm" variant="secondary">

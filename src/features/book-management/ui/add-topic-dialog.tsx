@@ -42,7 +42,7 @@ export default function AddTopicDialog({
   async function onSubmit(values: CreateTopicInput) {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/books/${bookId}/chapters/${chapterId}/topics`, {
+      const res = await fetch(`/api/topics?chapterId=${chapterId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

@@ -1,6 +1,7 @@
 import { QuizRunner } from "@/features/quiz-practice";
 import { Breadcrumbs } from "@/shared/ui";
 import { prisma } from "@/shared/lib/db";
+import { PageContainer, PageHeader } from "@/shared/ui/layout";
 
 /**
  * Simplified practice page route
@@ -30,20 +31,25 @@ export default async function PracticePage(props: {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-4">
-      <Breadcrumbs
-        items={[
-          { href: "/books", label: "Books" },
-          { href: `/books/${topic.chapter.book.id}`, label: topic.chapter.book.title },
-          {
-            href: `/books/${topic.chapter.book.id}/chapters/${topic.chapter.id}`,
-            label: topic.chapter.title,
-          },
-          { label: topic.title },
-        ]}
+    <PageContainer as="main" maxWidth="5xl">
+      <PageHeader
+        title={topic.title}
+        description="Practice your knowledge with flashcards"
+        breadcrumb={
+          <Breadcrumbs
+            items={[
+              { href: "/books", label: "Books" },
+              { href: `/books/${topic.chapter.book.id}`, label: topic.chapter.book.title },
+              {
+                href: `/books/${topic.chapter.book.id}/chapters/${topic.chapter.id}`,
+                label: topic.chapter.title,
+              },
+              { label: topic.title },
+            ]}
+          />
+        }
       />
-      <h1 className="text-2xl font-semibold mb-4">{topic.title}</h1>
       <QuizRunner topicId={topicId} />
-    </main>
+    </PageContainer>
   );
 }
