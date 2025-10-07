@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
@@ -14,8 +13,11 @@ import {
 import { Button } from "@/shared/ui/components/button";
 import { Input } from "@/shared/ui/components/input";
 import { Label } from "@/shared/ui/components/label";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
+import { PageRangeInput } from "@/shared/ui/forms";
 
 import { CreateChapterInput, CreateChapterSchema } from "@/entities/chapter";
+import { useCreateChapter } from "../api/use-create-chapter";
 
 export default function AddChapterDialog({
   open,
@@ -28,16 +30,13 @@ export default function AddChapterDialog({
   bookId: string;
   onCreated?: () => void;
 }) {
-  const [submitting, setSubmitting] = useState(false);
+  const { createChapter, isLoading: submitting } = useCreateChapter();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateChapterInput>({
+  const form = useForm<CreateChapterInput>({
     resolver: zodResolver(CreateChapterSchema),
   });
+
+  const { register, handleSubmit, reset, formState: { errors } } = form;
 
   async function onSubmit(values: CreateChapterInput) {
     if (values.pageEnd < values.pageStart) {
@@ -45,95 +44,53 @@ export default function AddChapterDialog({
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/chapters?bookId=${bookId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+    const result = await createChapter(bookId, values);
 
-      if (!res.ok) {
-        const msg = await res.text();
-        toast.error(msg || "Failed to create chapter");
-        return;
-      }
-
-      toast.success("Chapter created");
-      reset();
-      onOpenChange(false);
-      onCreated?.();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Network error";
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
+    if (!result) {
+      toast.error("Failed to create chapter");
+      return;
     }
+
+    toast.success("Chapter created");
+    reset();
+    onOpenChange(false);
+    onCreated?.();
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add chapter</DialogTitle>
-        </DialogHeader>
-        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
-          {/* Title */}
-          <div className="space-y-1">
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register("title")} />
-            {errors.title && (
-              <p className="text-sm text-red-600">{errors.title.message}</p>
-            )}
-          </div>
+        <ErrorBoundary>
+          <DialogHeader>
+            <DialogTitle>Add chapter</DialogTitle>
+          </DialogHeader>
+          <FormProvider {...form}>
+            <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
+              <div className="space-y-1">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" {...register("title")} />
+                {errors.title && (
+                  <p className="text-sm text-red-600">{errors.title.message}</p>
+                )}
+              </div>
 
-          {/* Page Range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="pageStart">Page start</Label>
-              <Input
-                id="pageStart"
-                type="number"
-                {...register("pageStart", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                })}
-              />
-              {errors.pageStart && (
-                <p className="text-sm text-red-600">
-                  {errors.pageStart.message}
-                </p>
-              )}
-            </div>
+              <PageRangeInput />
 
-            <div className="space-y-1">
-              <Label htmlFor="pageEnd">Page end</Label>
-              <Input
-                id="pageEnd"
-                type="number"
-                {...register("pageEnd", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                })}
-              />
-              {errors.pageEnd && (
-                <p className="text-sm text-red-600">{errors.pageEnd.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </form>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
+        </ErrorBoundary>
       </DialogContent>
     </Dialog>
   );

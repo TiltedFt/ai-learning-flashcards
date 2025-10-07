@@ -36,3 +36,21 @@ export function handleFormErrors(errors: Record<string, { message?: string }>) {
     }
   });
 }
+
+/**
+ * Handle API response and show appropriate notification
+ */
+export async function handleApiResponse(response: Response, successMessage?: string) {
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    notify.error(data.details || data.error || "An error occurred");
+    return { success: false, data: null };
+  }
+
+  if (successMessage) {
+    notify.success(successMessage);
+  }
+
+  return { success: true, data };
+}

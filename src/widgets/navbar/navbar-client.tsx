@@ -18,14 +18,6 @@ export default function NavbarClient({ fullName }: { fullName: string }) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const initials =
-    fullName
-      .split(" ")
-      .map((s) => s[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "U";
-
   async function onLogout() {
     const r = await fetch("/api/logout", { method: "POST" });
     if (r.ok) {
@@ -61,13 +53,6 @@ export default function NavbarClient({ fullName }: { fullName: string }) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link href="/statistics">Statistics</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

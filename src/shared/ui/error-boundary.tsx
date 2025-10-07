@@ -28,7 +28,11 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+    // Error is already captured in state and displayed to the user
+    // In production, you could log this to an error reporting service
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error caught by boundary:", error, errorInfo);
+    }
   }
 
   render() {

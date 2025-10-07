@@ -12,22 +12,16 @@ import {
   Field,
   FieldDescription,
   FieldGroup,
-  FieldLabel,
 } from "@/shared/ui/components/field";
-import { Input } from "@/shared/ui/components/input";
 import Link from "next/link";
 import { FieldErrors, FormProvider, useForm } from "react-hook-form";
-import {
-  LoginSchema,
-  SuccessfullAuthorizationSchema,
-} from "@/entities/user";
-import { ErrorMessage } from "@hookform/error-message";
+import { LoginSchema } from "@/entities/user";
 import { TxtInput } from "@/shared/ui/txt-input-field";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { notify } from "@/shared/lib/notifications";
+import { useLogin } from "../api/use-login";
 
 export function LoginForm() {
-  const router = useRouter();
+  const { login } = useLogin();
   const form = useForm({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -39,36 +33,20 @@ export function LoginForm() {
 
   const handleLogin = form.handleSubmit(
     async (data) => {
-      try {
-        const r = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        const j = await r.json();
+      const result = await login(data);
 
-        if (r.status !== 200) {
-          if (j.details) toast.error(j.details);
-          else if (j.error) toast.error(j.error);
-          else toast.error("Login failed");
-          return;
-        }
-
-        const parsed = SuccessfullAuthorizationSchema.safeParse(j);
-        if (!parsed.success) {
-          toast.error("Something went wrong. Contact support team.");
-        }
-
-        toast.success("Welcome " + parsed.data?.user.firstName);
-        router.replace("/books");
-        router.refresh(); 
-      } catch {
-        toast.error("Network error");
+      if (!result) {
+        // Error already handled by hook
+        notify.error("Login failed");
+        return;
       }
+
+      notify.success("Welcome " + result.user.firstName);
+      window.location.href = "/books";
     },
     (errs: FieldErrors) => {
       Object.values(errs).forEach(
-        (e) => e?.message && toast.error(String(e.message))
+        (e) => e?.message && notify.error(String(e.message))
       );
     }
   );
@@ -104,7 +82,7 @@ export function LoginForm() {
                 <Field>
                   <Button type="submit">Login</Button>
                   <FieldDescription className="text-center">
-                    Don't have an account? <Link href="/sign-up">Sign up</Link>
+                    Don&apos;t have an account? <Link href="/sign-up">Sign up</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

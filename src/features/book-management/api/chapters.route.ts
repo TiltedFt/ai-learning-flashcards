@@ -6,13 +6,13 @@ import { getSession } from "@/core/services/auth.service";
 import { withErrorHandler } from "@/shared/api/api-handler";
 
 export const POST = withErrorHandler(
-  async (req: NextRequest, context?: { params: { bookId: string } }) => {
+  async (req: NextRequest, context: { params: Promise<{ bookId: string }> }) => {
     const session = await getSession();
     if (!session) throw new UnauthorizedError();
 
-    const params = await context?.params;
-    if (!params?.bookId) {
-      throw new ValidationError("Missing bookid");
+    const params = await context.params;
+    if (!params.bookId) {
+      throw new ValidationError("Missing bookId");
     }
 
     const body = await req.json();
@@ -27,13 +27,13 @@ export const POST = withErrorHandler(
 );
 
 export const GET = withErrorHandler(
-  async (_req: NextRequest, context?: { params: { bookId: string } }) => {
+  async (_req: NextRequest, context: { params: Promise<{ bookId: string }> }) => {
     const session = await getSession();
     if (!session) throw new UnauthorizedError();
 
-    const params = await context?.params;
-    if (!params?.bookId) {
-      throw new ValidationError("Missing bookid");
+    const params = await context.params;
+    if (!params.bookId) {
+      throw new ValidationError("Missing bookId");
     }
 
     const items = await ChapterRepository.listChapters(params.bookId);

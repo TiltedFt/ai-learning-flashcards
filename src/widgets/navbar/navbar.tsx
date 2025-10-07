@@ -1,17 +1,13 @@
 import { getSession } from "@/core/services/auth.service";
 import { userRepository } from "@/core/repositories/user.repo";
 import NavbarClient from "./navbar-client";
-import { UnauthorizedError } from "@/shared/lib/errors";
-import { redirect } from "next/navigation";
 
 export default async function Navbar() {
   const session = await getSession();
-  if (!session) return redirect("/login");
+  if (!session) return null;
 
   const user = await userRepository.findByEmailWithouthPw(session.email);
-  if (!user) {
-    throw new UnauthorizedError();
-  }
+  if (!user) return null;
 
   const fullName = `${user.firstName} ${user.lastName}`;
 

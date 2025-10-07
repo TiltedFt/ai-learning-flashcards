@@ -1,5 +1,4 @@
-// src/app/login/page.tsx
-"use client";
+// src/app/sign-up/page.tsx
 import { SignupForm } from "@/features/auth";
 
 export default function SignupPage() {

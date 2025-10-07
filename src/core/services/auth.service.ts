@@ -80,15 +80,18 @@ export async function login(input: { email: string; password: string }) {
   }
 
   const token = await signSession({ sub: user.id, email: user.email });
-  const c = await cookies();
 
+  const c = await cookies();
   c.set(COOKIE, token, sessionCookieOpts);
-  const { passwordHash, ...safeUser } = user;
+
   return {
-    firstName: safeUser.firstName,
-    lastName: safeUser.lastName,
-    email: safeUser.email,
-    id: safeUser.id,
+    user: {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      id: user.id,
+    },
+    token,
   };
 }
 

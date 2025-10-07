@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { CreateTopicInput, CreateTopicSchema } from "@/entities/topic";
 import {
   Dialog,
@@ -13,22 +12,22 @@ import {
 import { Label } from "@/shared/ui/components/label";
 import { Input } from "@/shared/ui/components/input";
 import { Button } from "@/shared/ui/components/button";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import { toast } from "sonner";
+import { useCreateTopic } from "../api/use-create-topic";
 
 export default function AddTopicDialog({
   open,
   onOpenChange,
   chapterId,
-  bookId,
   onCreated,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   chapterId: string;
-  bookId: string;
   onCreated?: () => void;
 }) {
-  const [submitting, setSubmitting] = useState(false);
+  const { createTopic, isLoading: submitting } = useCreateTopic();
 
   const {
     register,
@@ -40,83 +39,76 @@ export default function AddTopicDialog({
   });
 
   async function onSubmit(values: CreateTopicInput) {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/topics?chapterId=${chapterId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+    const result = await createTopic(chapterId, values);
 
-      if (!res.ok) throw new Error(await res.text());
-
-      toast.success("Topic created");
-      reset();
-      onOpenChange(false);
-      onCreated?.();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to create topic";
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
+    if (!result) {
+      toast.error("Failed to create topic");
+      return;
     }
+
+    toast.success("Topic created");
+    reset();
+    onOpenChange(false);
+    onCreated?.();
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add topic</DialogTitle>
-        </DialogHeader>
-        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-1">
-            <Label>Title</Label>
-            <Input {...register("title")} />
-            {errors.title && (
-              <p className="text-sm text-red-600">{errors.title.message}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        <ErrorBoundary>
+          <DialogHeader>
+            <DialogTitle>Add topic</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-1">
-              <Label>Page start</Label>
-              <Input
-                type="number"
-                {...register("pageStart", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                })}
-              />
-              {errors.pageStart && (
-                <p className="text-sm text-red-600">
-                  {errors.pageStart.message}
-                </p>
+              <Label>Title</Label>
+              <Input {...register("title")} />
+              {errors.title && (
+                <p className="text-sm text-red-600">{errors.title.message}</p>
               )}
             </div>
-            <div className="space-y-1">
-              <Label>Page end</Label>
-              <Input
-                type="number"
-                {...register("pageEnd", {
-                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                })}
-              />
-              {errors.pageEnd && (
-                <p className="text-sm text-red-600">{errors.pageEnd.message}</p>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Page start</Label>
+                <Input
+                  type="number"
+                  {...register("pageStart", {
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
+                />
+                {errors.pageStart && (
+                  <p className="text-sm text-red-600">
+                    {errors.pageStart.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Page end</Label>
+                <Input
+                  type="number"
+                  {...register("pageEnd", {
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
+                />
+                {errors.pageEnd && (
+                  <p className="text-sm text-red-600">{errors.pageEnd.message}</p>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              type="button"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </form>
+        </ErrorBoundary>
       </DialogContent>
     </Dialog>
   );

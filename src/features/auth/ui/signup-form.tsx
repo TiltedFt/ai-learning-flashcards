@@ -11,20 +11,19 @@ import {
   Field,
   FieldDescription,
   FieldGroup,
-  FieldLabel,
 } from "@/shared/ui/components/field";
-import { Input } from "@/shared/ui/components/input";
 import { SignupSchema } from "@/entities/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { FieldErrors, FormProvider, useForm } from "react-hook-form";
 import { TxtInput } from "@/shared/ui/txt-input-field";
-import { toast } from "sonner";
+import { notify } from "@/shared/lib/notifications";
 import { useRouter } from "next/navigation";
+import { useSignup } from "../api/use-signup";
 
-// SignupSchema
 export function SignupForm() {
   const router = useRouter();
+  const { signup } = useSignup();
   const form = useForm({
     resolver: zodResolver(SignupSchema),
     defaultValues: {
@@ -36,30 +35,20 @@ export function SignupForm() {
   });
   const handleSignup = form.handleSubmit(
     async (data) => {
-      try {
-        const r = await fetch("/api/sign-up", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        const j = await r.json();
-        console.log(r.status);
-        if (r.status !== 201) {
-          if (j.details) toast.error(j.details);
-          else if (j.error) toast.error(j.error);
-          else toast.error("Signup failed");
-          return;
-        }
-        toast.success("Account created");
-        router.replace("/books");
-        router.refresh();
-      } catch {
-        toast.error("Network error");
+      const result = await signup(data);
+
+      if (!result) {
+        notify.error("Signup failed");
+        return;
       }
+
+      notify.success("Account created");
+      router.replace("/books");
+      router.refresh();
     },
     (errs: FieldErrors) => {
       Object.values(errs).forEach(
-        (e) => e?.message && toast.error(String(e.message))
+        (e) => e?.message && notify.error(String(e.message))
       );
     }
   );

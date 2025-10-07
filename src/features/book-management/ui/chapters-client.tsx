@@ -4,14 +4,8 @@ import Link from "next/link";
 import { useEffect } from "react";
 import AddChapterDialog from "./add-chapter-dialog";
 import { Button } from "@/shared/ui/components/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/components/table";
+import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import {
   useChapters,
   useBooksActions,
@@ -38,76 +32,69 @@ export function ChaptersClient({
 
   useEffect(() => {
     fetchChapters(bookId);
-  }, [bookId, fetchChapters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId]);
 
   const handleChapterCreated = () => {
     invalidateChapters(bookId);
     fetchChapters(bookId);
   };
 
+  const columns: DataTableColumn<ChapterRow>[] = [
+    {
+      header: "Order",
+      accessor: (ch) => ch.order,
+      className: "w-20",
+    },
+    {
+      header: "Title",
+      accessor: (ch) => ch.title,
+    },
+    {
+      header: "Pages",
+      accessor: (ch) => `${ch.pageStart}-${ch.pageEnd}`,
+      className: "w-48",
+    },
+    {
+      header: "Actions",
+      accessor: (ch) => (
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/books/${bookId}/chapters/${ch.id}`}>To topics</Link>
+          </Button>
+          <Button variant="destructive" disabled>
+            Remove
+          </Button>
+        </div>
+      ),
+      className: "w-64",
+    },
+  ];
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="text-lg font-medium">Chapters</div>
-        <Button
-          onClick={() => dialog.open()}
-        >
-          Add chapter
-        </Button>
-      </div>
+    <ErrorBoundary>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-lg font-medium">Chapters</div>
+          <Button onClick={() => dialog.open()}>Add chapter</Button>
+        </div>
 
-      <AddChapterDialog
-        open={dialog.isOpen}
-        onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
-        bookId={bookId}
-        onCreated={handleChapterCreated}
-      />
+        <AddChapterDialog
+          open={dialog.isOpen}
+          onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
+          bookId={bookId}
+          onCreated={handleChapterCreated}
+        />
 
-      <div className="rounded-2xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">Order</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead className="w-48">Pages</TableHead>
-              <TableHead className="w-64">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={4}>Loading…</TableCell>
-              </TableRow>
-            )}
-            {!isLoading && chapters.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4}>No chapters</TableCell>
-              </TableRow>
-            )}
-            {!isLoading &&
-              chapters.map((ch) => (
-                <TableRow key={ch.id}>
-                  <TableCell>{ch.order}</TableCell>
-                  <TableCell>{ch.title}</TableCell>
-                  <TableCell>
-                    {ch.pageStart}-{ch.pageEnd}
-                  </TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button variant="outline" asChild>
-                      <Link href={`/books/${bookId}/chapters/${ch.id}`}>
-                        To topics
-                      </Link>
-                    </Button>
-                    <Button variant="destructive" disabled>
-                      Remove
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={chapters}
+          columns={columns}
+          isLoading={isLoading}
+          getRowKey={(ch) => ch.id}
+          emptyMessage="No chapters"
+        />
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 

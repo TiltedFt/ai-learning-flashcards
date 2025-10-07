@@ -6,7 +6,7 @@ import { ApiHandler, RouteContext } from "./types";
 export function withErrorHandler<TParams = Record<string, string>>(
   handler: ApiHandler<TParams>
 ): ApiHandler<TParams> {
-  return async (req: NextRequest, context?: RouteContext<TParams>) => {
+  return async (req: NextRequest, context: RouteContext<TParams>) => {
     try {
       return await handler(req, context);
     } catch (error) {
@@ -27,7 +27,7 @@ export function withErrorHandler<TParams = Record<string, string>>(
         );
       }
 
-      // Fallbackk: unhandleded prisma errors just in case
+      // Fallback: unhandled prisma errors just in case
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         console.error(`unhandled prisma error: ${error.code}`);
         // 500 error not to expose real prisma message :)))))

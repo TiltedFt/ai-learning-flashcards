@@ -1,11 +1,10 @@
-import Link from "next/link";
-import { Button } from "@/shared/ui/components/button";
 import { BooksTable } from "@/widgets/books-table";
 import { getMyPaginatedBooks } from "@/core/services/books.service";
 import { unstable_noStore as noStore } from "next/cache";
 import { AutoPageSize } from "@/widgets/pagination";
 import { CreateBookDialog } from "@/features/book-management";
 import { PageContainer, PageHeader } from "@/shared/ui/layout";
+import { DataTablePagination } from "@/shared/ui/data-table";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -34,36 +33,15 @@ export default async function Books({
 
       <BooksTable items={data.items} />
 
-      <div className="mt-6 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          Page {page} of {data.pages} • {data.total} total
-        </span>
-        <div className="flex gap-2">
-          {page > 1 ? (
-            <Button asChild variant="outline">
-              <Link href={`/books?page=${page - 1}&pageSize=${pageSize}`}>
-                Prev
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" disabled>
-              Prev
-            </Button>
-          )}
-
-          {page < data.pages ? (
-            <Button asChild variant="outline">
-              <Link href={`/books?page=${page + 1}&pageSize=${pageSize}`}>
-                Next
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" disabled>
-              Next
-            </Button>
-          )}
-        </div>
-      </div>
+      <DataTablePagination
+        pagination={{
+          currentPage: page,
+          totalPages: data.pages,
+          totalItems: data.total,
+          pageSize,
+        }}
+        baseUrl="/books"
+      />
     </PageContainer>
   );
 }

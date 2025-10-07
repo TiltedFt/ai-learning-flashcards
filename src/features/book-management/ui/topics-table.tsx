@@ -3,16 +3,18 @@
 import { useEffect } from "react";
 import { Button } from "@/shared/ui/components/button";
 import AddTopicDialog from "./add-topic-dialog";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/shared/ui/components/table";
 import Link from "next/link";
 import { useTopics, useBooksActions, useDialog } from "@/shared/stores";
+import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
+
+type Topic = {
+  id: string;
+  order: number | null;
+  title: string;
+  pageStart: number;
+  pageEnd: number;
+};
 
 export default function TopicsTable({
   chapterId,
@@ -27,70 +29,69 @@ export default function TopicsTable({
 
   useEffect(() => {
     fetchTopics(bookId, chapterId);
-  }, [bookId, chapterId, fetchTopics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId, chapterId]);
 
   const handleTopicCreated = () => {
     invalidateTopics(chapterId);
     fetchTopics(bookId, chapterId);
   };
 
-  return (
-    <div className="space-y-4 mt-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Topics</h3>
+  const columns: DataTableColumn<Topic>[] = [
+    {
+      header: "Order",
+      accessor: (t) => t.order ?? "-",
+      className: "w-20",
+    },
+    {
+      header: "Title",
+      accessor: (t) => t.title,
+    },
+    {
+      header: "Pages",
+      accessor: (t) => `${t.pageStart}–${t.pageEnd}`,
+      className: "w-48",
+    },
+    {
+      header: "Actions",
+      accessor: (t) => (
         <div className="flex gap-2">
-          <Button onClick={() => dialog.open()}>Add topic</Button>
-          <AddTopicDialog
-            open={dialog.isOpen}
-            onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
-            chapterId={chapterId}
-            bookId={bookId}
-            onCreated={handleTopicCreated}
-          />
+          <Button variant="outline" asChild>
+            <Link href={`/practice/${t.id}`}>To quiz</Link>
+          </Button>
+          <Button variant="destructive" disabled>
+            Remove
+          </Button>
         </div>
-      </div>
+      ),
+      className: "w-64",
+    },
+  ];
 
-      <div className="rounded-2xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">Order</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead className="w-48">Pages</TableHead>
-              <TableHead className="w-64">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4}>Loading…</TableCell>
-              </TableRow>
-            ) : topics.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4}>No topics yet</TableCell>
-              </TableRow>
-            ) : (
-              topics.map((t, i) => (
-                <TableRow key={t.id}>
-                  <TableCell>{t.order ?? i + 1}</TableCell>
-                  <TableCell>{t.title}</TableCell>
-                  <TableCell>
-                    {t.pageStart}–{t.pageEnd}
-                  </TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button variant="outline" asChild>
-                      <Link href={`/practice/${t.id}`}>To quiz</Link>
-                    </Button>
-                    <Button variant="destructive" disabled>
-                      Remove
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+  return (
+    <ErrorBoundary>
+      <div className="space-y-4 mt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Topics</h3>
+          <div className="flex gap-2">
+            <Button onClick={() => dialog.open()}>Add topic</Button>
+            <AddTopicDialog
+              open={dialog.isOpen}
+              onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
+              chapterId={chapterId}
+              onCreated={handleTopicCreated}
+            />
+          </div>
+        </div>
+
+        <DataTable
+          data={topics}
+          columns={columns}
+          isLoading={isLoading}
+          getRowKey={(t) => t.id}
+          emptyMessage="No topics yet"
+        />
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
