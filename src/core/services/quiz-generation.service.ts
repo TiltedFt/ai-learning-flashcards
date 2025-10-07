@@ -126,8 +126,21 @@ Return ONLY valid JSON. No markdown, no explanations outside the JSON structure.
 function userPrompt(topic: string, text: string) {
   return `Topic: ${topic}\nSource text:\n"""${text}"""\nRules: 4 options, exactly one correct, non-abstract, test understanding.`;
 }
-
 export async function ensureTopicQuestions(chapterId: string, topicId: string) {
+  // ✅ Шаг 1: Быстрая проверка существующих вопросов
+  let existingQuestions = await prisma.question.findMany({
+    where: { topicId },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (existingQuestions.length > 0) {
+    console.log(
+      `Found ${existingQuestions.length} existing questions for topic ${topicId}`
+    );
+    return existingQuestions;
+  }
+
+  // ✅ Шаг 2: Получаем данные топика
   const topic = await prisma.topic.findUnique({
     where: { id: topicId },
     select: {
@@ -148,6 +161,7 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
       },
     },
   });
+
   if (!topic) throw new Error("Topic not found");
 
   const from = topic.pageStart ?? 1;
@@ -162,112 +176,106 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
     .update(raw)
     .digest("hex")}`;
 
-  // Check if questions already exist for this topic
-  const existingQuestions = await prisma.question.findMany({
-    where: { topicId },
-  });
-
-  if (existingQuestions.length > 0) {
-    return existingQuestions;
-  }
-
-  // Check cache for generation data
   const cached = await prisma.genCache.findUnique({ where: { key } });
+
+  let questionsData: {
+    stem: string;
+    options: string[];
+    correctIndex: number;
+    explanation?: string;
+  }[];
+
   if (cached) {
     const payload = JSON.parse(cached.payload) as {
-      questions: {
-        stem: string;
-        options: string[];
-        correctIndex: number;
-        explanation?: string;
-      }[];
+      questions: typeof questionsData;
     };
-    return writeQuestions(chapterId, topicId, payload.questions);
-  }
-
-  console.time("openai");
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: prompt },
-      { role: "user", content: userPrompt(topic.title, raw) },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.4,
-  });
-  console.timeEnd("openai");
-
-  interface QuestionData {
-    stem: string;
-    options: string[];
-    correctIndex: number;
-    explanation?: string;
-  }
-
-  interface OpenAIQuizResponse {
-    questions: QuestionData[];
-  }
-
-  const content = completion.choices[0].message.content ?? "{}";
-  let json: OpenAIQuizResponse;
-  try {
-    json = JSON.parse(content) as OpenAIQuizResponse;
-  } catch {
-    json = { questions: [] };
-  }
-  if (
-    !json.questions ||
-    !Array.isArray(json.questions) ||
-    json.questions.length === 0
-  ) {
-    // fallback single question
-    json = {
-      questions: [
-        {
-          stem: `What is the main idea of: ${topic.title}?`,
-          options: ["A", "B", "C", "D"],
-          correctIndex: 0,
-          explanation: "From the provided text",
-        },
+    questionsData = payload.questions;
+  } else {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: userPrompt(topic.title, raw) },
       ],
-    };
+      response_format: { type: "json_object" },
+      temperature: 0.4,
+    });
+
+    const content = completion.choices[0].message.content ?? "{}";
+    let json: { questions: typeof questionsData };
+
+    try {
+      json = JSON.parse(content) as { questions: typeof questionsData };
+    } catch {
+      json = { questions: [] };
+    }
+
+    if (
+      !json.questions ||
+      !Array.isArray(json.questions) ||
+      json.questions.length === 0
+    ) {
+      json = {
+        questions: [
+          {
+            stem: `What is the main idea of: ${topic.title}?`,
+            options: ["A", "B", "C", "D"],
+            correctIndex: 0,
+            explanation: "From the provided text",
+          },
+        ],
+      };
+    }
+
+    questionsData = json.questions;
+
+    await prisma.genCache.upsert({
+      where: { key },
+      create: {
+        key,
+        payload: JSON.stringify(json),
+        tokens: completion.usage?.total_tokens ?? 0,
+      },
+      update: {},
+    });
   }
 
-  await prisma.genCache.create({
-    data: {
-      key,
-      payload: JSON.stringify(json),
-      tokens: completion.usage?.total_tokens ?? 0,
-    },
-  });
-  return writeQuestions(chapterId, topicId, json.questions);
-}
+  try {
+    const created = await prisma.$transaction(
+      questionsData.map((q) =>
+        prisma.question.create({
+          data: {
+            chapterId,
+            topicId,
+            stem: q.stem,
+            options: q.options,
+            correctIndex: Math.max(0, Math.min(3, Number(q.correctIndex ?? 0))),
+            explanation: q.explanation ?? null,
+            provenance: { source: "openai", model: "gpt-4o-mini" },
+            modelSnapshot: "gpt-4o-mini",
+          },
+        })
+      )
+    );
 
-async function writeQuestions(
-  chapterId: string,
-  topicId: string,
-  qs: {
-    stem: string;
-    options: string[];
-    correctIndex: number;
-    explanation?: string;
-  }[]
-) {
-  const created = await prisma.$transaction(
-    qs.map((q) =>
-      prisma.question.create({
-        data: {
-          chapterId,
-          topicId,
-          stem: q.stem,
-          options: q.options,
-          correctIndex: Math.max(0, Math.min(3, Number(q.correctIndex ?? 0))),
-          explanation: q.explanation ?? null,
-          provenance: { source: "openai", model: "gpt-4.1-mini" },
-          modelSnapshot: "gpt-4.1-mini",
-        },
-      })
-    )
-  );
-  return created;
+    console.log(`Created ${created.length} questions for topic ${topicId}`);
+    return created;
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      console.log(
+        `Conflict detected, returning existing questions for topic ${topicId}`
+      );
+      existingQuestions = await prisma.question.findMany({
+        where: { topicId },
+        orderBy: { createdAt: "asc" },
+      });
+
+      if (existingQuestions.length > 0) {
+        return existingQuestions;
+      }
+    }
+
+    // Если это другая ошибка или вопросов все еще нет, пробрасываем ошибку
+    throw error;
+  }
 }

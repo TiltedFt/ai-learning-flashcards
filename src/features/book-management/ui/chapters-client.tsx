@@ -6,11 +6,7 @@ import AddChapterDialog from "./add-chapter-dialog";
 import { Button } from "@/shared/ui/components/button";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
 import { ErrorBoundary } from "@/shared/ui/error-boundary";
-import {
-  useChapters,
-  useBooksActions,
-  useDialog,
-} from "@/shared/stores";
+import { useChapters, useBooksActions, useDialog } from "@/shared/stores";
 
 export type ChapterRow = {
   id: string;
@@ -41,11 +37,6 @@ export function ChaptersClient({
   };
 
   const columns: DataTableColumn<ChapterRow>[] = [
-    {
-      header: "Order",
-      accessor: (ch) => ch.order,
-      className: "w-20",
-    },
     {
       header: "Title",
       accessor: (ch) => ch.title,

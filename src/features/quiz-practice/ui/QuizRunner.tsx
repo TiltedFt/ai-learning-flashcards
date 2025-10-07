@@ -8,12 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui/components/card";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/shared/ui/components/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/components/radio-group";
 import { Label } from "@/shared/ui/components/label";
 import { useQuizStore } from "@/shared/stores";
+import { Skeleton } from "@/shared/ui";
 
 export type Question = {
   id: string;
@@ -22,6 +20,41 @@ export type Question = {
   correctIndex: number;
   explanation?: string | null;
 };
+
+function QuizSkeleton() {
+  return (
+    <div className="p-6 max-w-2xl mx-auto space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className="h-6 w-32" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-3/4" />
+          </div>
+
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 rounded-lg border border-muted p-3"
+              >
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
+          </div>
+
+          {/* Button skeleton */}
+          <Skeleton className="h-10 w-20" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function QuizRunner({ topicId }: { topicId: string }) {
   const {
@@ -43,7 +76,7 @@ export default function QuizRunner({ topicId }: { topicId: string }) {
     loadQuiz(topicId);
   }, [topicId, loadQuiz]);
 
-  if (isLoading) return <div className="p-6">Loading…</div>;
+  if (isLoading) return <QuizSkeleton />;
 
   const question = getCurrentQuestion();
   if (!question) return <div className="p-6">No questions.</div>;
@@ -113,7 +146,9 @@ export default function QuizRunner({ topicId }: { topicId: string }) {
             >
               {isCorrect
                 ? "Correct"
-                : `Incorrect. Correct: ${question.options[question.correctIndex]}`}
+                : `Incorrect. Correct: ${
+                    question.options[question.correctIndex]
+                  }`}
               {question.explanation && (
                 <div className="mt-2 text-muted-foreground">
                   {question.explanation}

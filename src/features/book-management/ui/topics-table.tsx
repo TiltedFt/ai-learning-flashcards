@@ -39,11 +39,6 @@ export default function TopicsTable({
 
   const columns: DataTableColumn<Topic>[] = [
     {
-      header: "Order",
-      accessor: (t) => t.order ?? "-",
-      className: "w-20",
-    },
-    {
       header: "Title",
       accessor: (t) => t.title,
     },

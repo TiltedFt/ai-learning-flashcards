@@ -25,7 +25,6 @@ export interface BookPaginateParams {
 export type ChapterSummary = {
   id: string;
   title: string | null;
-  order: number | null;
   pageStart: number | null;
   pageEnd: number | null;
   topicCount: number;
@@ -122,7 +121,6 @@ export const bookRepository = {
       chapters: chapters.map((c) => ({
         id: c.id,
         title: c.title,
-        order: c.order,
         pageStart: c.pageStart,
         pageEnd: c.pageEnd,
         topicCount: c._count.topics,

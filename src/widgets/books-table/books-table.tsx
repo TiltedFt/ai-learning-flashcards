@@ -31,7 +31,12 @@ export function BooksTable({ items }: { items: BookItem[] }) {
           <Button asChild size="sm" variant="secondary">
             <Link href={`/books/${book.id}`}>Practice</Link>
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => onDelete(book.id)}>
+          <Button
+            size="sm"
+            disabled
+            variant="destructive"
+            onClick={() => onDelete(book.id)}
+          >
             Delete
           </Button>
         </div>
