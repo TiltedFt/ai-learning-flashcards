@@ -199,6 +199,9 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
       ],
       response_format: { type: "json_object" },
       temperature: 0.4,
+      frequency_penalty: 0.5,
+      presence_penalty: 0.3,
+      max_tokens: 16000,
     });
 
     const content = completion.choices[0].message.content ?? "{}";
