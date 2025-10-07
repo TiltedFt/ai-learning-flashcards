@@ -66,9 +66,9 @@ export function LoginForm() {
         toast.error("Network error");
       }
     },
-    (errs) => {
+    (errs: FieldErrors) => {
       Object.values(errs).forEach(
-        (e: any) => e?.message && toast.error(e.message)
+        (e) => e?.message && toast.error(String(e.message))
       );
     }
   );

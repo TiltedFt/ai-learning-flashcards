@@ -54,8 +54,9 @@ export default function AddTopicDialog({
       reset();
       onOpenChange(false);
       onCreated?.();
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to create topic");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to create topic";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

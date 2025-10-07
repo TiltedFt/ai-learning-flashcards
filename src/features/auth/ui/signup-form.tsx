@@ -17,7 +17,7 @@ import { Input } from "@/shared/ui/components/input";
 import { SignupSchema } from "@/entities/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { FormProvider, useForm } from "react-hook-form";
+import { FieldErrors, FormProvider, useForm } from "react-hook-form";
 import { TxtInput } from "@/shared/ui/txt-input-field";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -57,9 +57,9 @@ export function SignupForm() {
         toast.error("Network error");
       }
     },
-    (errs) => {
+    (errs: FieldErrors) => {
       Object.values(errs).forEach(
-        (e: any) => e?.message && toast.error(e.message)
+        (e) => e?.message && toast.error(String(e.message))
       );
     }
   );

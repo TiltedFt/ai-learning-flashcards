@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/shared/ui/components/button";
-import { useRouter } from "next/navigation";
 import AddTopicDialog from "./add-topic-dialog";
 import {
   Table,
@@ -13,14 +12,7 @@ import {
   TableCell,
 } from "@/shared/ui/components/table";
 import Link from "next/link";
-
-type Topic = {
-  id: string;
-  title: string;
-  pageStart: number;
-  pageEnd: number;
-  order: number;
-};
+import { useTopics, useBooksActions, useDialog } from "@/shared/stores";
 
 export default function TopicsTable({
   chapterId,
@@ -29,33 +21,31 @@ export default function TopicsTable({
   chapterId: string;
   bookId: string;
 }) {
-  const [topics, setTopics] = useState<Topic[] | null>(null);
-  const [open, setOpen] = useState(false);
-
-  async function fetchTopics() {
-    const res = await fetch(`/api/books/${bookId}/chapters/${chapterId}/topics`);
-    if (res.ok) {
-      const data = await res.json();
-      setTopics(data);
-    }
-  }
+  const { data: topics, isLoading } = useTopics(chapterId);
+  const { fetchTopics, invalidateTopics } = useBooksActions();
+  const dialog = useDialog("addTopic");
 
   useEffect(() => {
-    fetchTopics();
-  }, [chapterId]);
+    fetchTopics(bookId, chapterId);
+  }, [bookId, chapterId, fetchTopics]);
+
+  const handleTopicCreated = () => {
+    invalidateTopics(chapterId);
+    fetchTopics(bookId, chapterId);
+  };
 
   return (
     <div className="space-y-4 mt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Topics</h3>
         <div className="flex gap-2">
-          <Button onClick={() => setOpen(true)}>Add topic</Button>
+          <Button onClick={() => dialog.open()}>Add topic</Button>
           <AddTopicDialog
-            open={open}
-            onOpenChange={setOpen}
+            open={dialog.isOpen}
+            onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
             chapterId={chapterId}
             bookId={bookId}
-            onCreated={fetchTopics}
+            onCreated={handleTopicCreated}
           />
         </div>
       </div>
@@ -71,7 +61,7 @@ export default function TopicsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {topics === null ? (
+            {isLoading ? (
               <TableRow>
                 <TableCell colSpan={4}>Loading…</TableCell>
               </TableRow>
@@ -89,11 +79,7 @@ export default function TopicsTable({
                   </TableCell>
                   <TableCell className="flex gap-2">
                     <Button variant="outline" asChild>
-                      <Link
-                        href={`/books/${bookId}/chapters/${chapterId}/topics/${t.id}/practice`}
-                      >
-                        To quiz
-                      </Link>
+                      <Link href={`/practice/${t.id}`}>To quiz</Link>
                     </Button>
                     <Button variant="destructive" disabled>
                       Remove

@@ -17,10 +17,10 @@ export default function AutoPageSizeOnce({
     ran.current = true;
 
     const vh = window.innerHeight;
-    const TOP = 160; // шапка/отступы
-    const PAGER = 56; // панель пагинации
-    const THEAD = 48; // заголовок таблицы
-    const ROW = 52; // высота строки
+    const TOP = 160; // margin top
+    const PAGER = 56; // pagination panel
+    const THEAD = 48;
+    const ROW = 52;
     const avail = Math.max(200, vh - TOP - PAGER);
     const rows = Math.max(1, Math.floor((avail - THEAD) / ROW));
 

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AppError } from "@/shared/lib/errors";
 import { Prisma } from "@prisma/client";
+import { ApiHandler, RouteContext } from "./types";
 
-type ApiHandler = (
-  req: NextRequest,
-  context?: { params: any }
-) => Promise<NextResponse>;
-
-export function withErrorHandler(handler: ApiHandler): ApiHandler {
-  return async (req: NextRequest, context?: { params: any }) => {
+export function withErrorHandler<TParams = Record<string, string>>(
+  handler: ApiHandler<TParams>
+): ApiHandler<TParams> {
+  return async (req: NextRequest, context?: RouteContext<TParams>) => {
     try {
       return await handler(req, context);
     } catch (error) {

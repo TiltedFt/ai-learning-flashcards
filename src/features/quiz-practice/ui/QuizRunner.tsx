@@ -1,85 +1,79 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import { Button } from "@/shared/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/components/card";
-import { RadioGroup, RadioGroupItem } from "@/shared/ui/components/radio-group";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui/components/card";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/shared/ui/components/radio-group";
 import { Label } from "@/shared/ui/components/label";
+import { useQuizStore } from "@/shared/stores";
 
 export type Question = {
   id: string;
   stem: string;
-  options: string[]; // 4 options
-  correctIndex: number; // single-correct to match your DB
+  options: string[];
+  correctIndex: number;
   explanation?: string | null;
 };
 
-type QuizPayload = { questions: Question[] };
-
-export default function QuizRunner({
-  bookId,
-  chapterId,
-  topicId,
-}: {
-  bookId: string;
-  chapterId: string;
-  topicId: string;
-}) {
-  const [quiz, setQuiz] = useState<QuizPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [idx, setIdx] = useState(0);
-  const [choice, setChoice] = useState<string>("");
-  const [checked, setChecked] = useState<boolean>(false);
-  const [score, setScore] = useState<number>(0);
-
-  async function load() {
-    setLoading(true);
-    const res = await fetch(
-      `/api/books/${bookId}/chapters/${chapterId}/topics/${topicId}/quiz`,
-      { cache: "no-store" }
-    );
-    const data = await res.json();
-    setQuiz(data);
-    setLoading(false);
-    setIdx(0);
-    setChoice("");
-    setChecked(false);
-    setScore(0);
-  }
+export default function QuizRunner({ topicId }: { topicId: string }) {
+  const {
+    isLoading,
+    selectedOption,
+    isChecked,
+    score,
+    loadQuiz,
+    selectOption,
+    checkAnswer,
+    nextQuestion,
+    resetQuiz,
+    getCurrentQuestion,
+    getProgress,
+    isLastQuestion,
+  } = useQuizStore();
 
   useEffect(() => {
-    load();
-  }, [chapterId, topicId]);
+    loadQuiz(topicId);
+  }, [topicId, loadQuiz]);
 
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (!quiz || quiz.questions.length === 0)
-    return <div className="p-6">No questions.</div>;
+  if (isLoading) return <div className="p-6">Loading…</div>;
 
-  const q = quiz.questions[idx];
-  const isCorrect = checked && parseInt(choice, 10) === q.correctIndex;
+  const question = getCurrentQuestion();
+  if (!question) return <div className="p-6">No questions.</div>;
+
+  const progress = getProgress();
+  const isLast = isLastQuestion();
+  const selectedIndex = parseInt(selectedOption, 10);
+  const isCorrect = isChecked && selectedIndex === question.correctIndex;
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>
-            Question {idx + 1} / {quiz.questions.length}
+            Question {progress.current} / {progress.total}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-base">{q.stem}</div>
+          <div className="text-base">{question.stem}</div>
           <RadioGroup
-            value={choice}
-            onValueChange={(v) => {
-              if (!checked) setChoice(v);
-            }}
+            value={selectedOption}
+            onValueChange={(v) => selectOption(parseInt(v, 10))}
           >
-            {q.options.map((opt, i) => (
+            {question.options.map((opt, i) => (
               <div
                 key={i}
                 className={`flex items-center gap-2 rounded-lg border p-3 ${
-                  checked && i === q.correctIndex
+                  isChecked && i === question.correctIndex
                     ? "border-green-500"
-                    : checked && i === parseInt(choice, 10)
+                    : isChecked && i === selectedIndex
                     ? "border-red-500"
                     : "border-muted"
                 }`}
@@ -87,44 +81,31 @@ export default function QuizRunner({
                 <RadioGroupItem
                   id={`opt-${i}`}
                   value={String(i)}
-                  disabled={checked}
+                  disabled={isChecked}
                 />
                 <Label htmlFor={`opt-${i}`}>{opt}</Label>
               </div>
             ))}
           </RadioGroup>
           <div className="flex gap-2">
-            {!checked ? (
-              <Button
-                onClick={() => {
-                  if (choice !== "") {
-                    setChecked(true);
-                    if (parseInt(choice, 10) === q.correctIndex)
-                      setScore((s) => s + 1);
-                  }
-                }}
-              >
+            {!isChecked ? (
+              <Button onClick={checkAnswer} disabled={selectedOption === ""}>
                 Check
               </Button>
             ) : (
               <>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setChecked(false);
-                    setChoice("");
-                    if (idx < quiz.questions.length - 1) setIdx((i) => i + 1);
-                  }}
-                >
-                  Next
-                </Button>
-                <Button variant="outline" onClick={load}>
+                {!isLast && (
+                  <Button variant="secondary" onClick={nextQuestion}>
+                    Next
+                  </Button>
+                )}
+                <Button variant="outline" onClick={resetQuiz}>
                   Restart
                 </Button>
               </>
             )}
           </div>
-          {checked && (
+          {isChecked && (
             <div
               className={`text-sm ${
                 isCorrect ? "text-green-600" : "text-red-600"
@@ -132,20 +113,20 @@ export default function QuizRunner({
             >
               {isCorrect
                 ? "Correct"
-                : `Incorrect. Correct: ${q.options[q.correctIndex]}`}
-              {q.explanation ? (
+                : `Incorrect. Correct: ${question.options[question.correctIndex]}`}
+              {question.explanation && (
                 <div className="mt-2 text-muted-foreground">
-                  {q.explanation}
+                  {question.explanation}
                 </div>
-              ) : null}
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {idx === quiz.questions.length - 1 && checked && (
+      {isLast && isChecked && (
         <div className="text-sm text-muted-foreground">
-          Score: {score} / {quiz.questions.length}
+          Score: {score} / {progress.total}
         </div>
       )}
     </div>

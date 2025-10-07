@@ -20,10 +20,10 @@ import { Input } from "@/shared/ui/components/input";
 import { TxtInput } from "@/shared/ui/txt-input-field";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useDialog } from "@/shared/stores";
 
 export default function CreateBookDialog() {
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog("createBook");
   const router = useRouter();
   const form = useForm<CreateBookFormInput>({
     resolver: zodResolver(CreateBookFormSchema),
@@ -42,12 +42,13 @@ export default function CreateBookDialog() {
       toast.error(j.details || j.error || "Create failed");
       return;
     }
-    setOpen(false);
+    dialog.close();
+    form.reset();
     router.replace(`/books/${j.id}`);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={dialog.isOpen} onOpenChange={(open) => open ? dialog.open() : dialog.close()}>
       <DialogTrigger asChild>
         <Button>Create</Button>
       </DialogTrigger>
@@ -105,7 +106,7 @@ export default function CreateBookDialog() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => dialog.close()}
               >
                 Cancel
               </Button>

@@ -15,10 +15,7 @@ import { Button } from "@/shared/ui/components/button";
 import { Input } from "@/shared/ui/components/input";
 import { Label } from "@/shared/ui/components/label";
 
-import {
-  CreateChapterInput,
-  CreateChapterSchema,
-} from "@/entities/chapter";
+import { CreateChapterInput, CreateChapterSchema } from "@/entities/chapter";
 
 export default function AddChapterDialog({
   open,
@@ -50,7 +47,7 @@ export default function AddChapterDialog({
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/books/${bookId}/chapters`, {
+      const res = await fetch(`/api/chapters?bookId=${bookId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -66,8 +63,9 @@ export default function AddChapterDialog({
       reset();
       onOpenChange(false);
       onCreated?.();
-    } catch (e: any) {
-      toast.error(e?.message || "Network error");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Network error";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

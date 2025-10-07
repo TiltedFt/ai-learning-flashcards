@@ -1,8 +1,7 @@
 "use client";
 
-import useSWR from "swr";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect } from "react";
 import AddChapterDialog from "./add-chapter-dialog";
 import { Button } from "@/shared/ui/components/button";
 import {
@@ -13,6 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/components/table";
+import {
+  useChapters,
+  useBooksActions,
+  useDialog,
+} from "@/shared/stores";
 
 export type ChapterRow = {
   id: string;
@@ -22,33 +26,41 @@ export type ChapterRow = {
   pageEnd: number;
 };
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
 export function ChaptersClient({
   bookId,
-  bookTitle,
 }: {
   bookId: string;
   bookTitle: string;
 }) {
-  const { data, isLoading, mutate } = useSWR<ChapterRow[]>(
-    `/api/books/${bookId}/chapters`,
-    fetcher
-  );
-  const [open, setOpen] = useState(false);
+  const { data: chapters, isLoading } = useChapters(bookId);
+  const { fetchChapters, invalidateChapters } = useBooksActions();
+  const dialog = useDialog("addChapter");
+
+  useEffect(() => {
+    fetchChapters(bookId);
+  }, [bookId, fetchChapters]);
+
+  const handleChapterCreated = () => {
+    invalidateChapters(bookId);
+    fetchChapters(bookId);
+  };
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-lg font-medium">Chapters</div>
-        <Button onClick={() => setOpen(true)}>Add chapter</Button>
+        <Button
+          onClick={() => dialog.open()}
+        >
+          Add chapter
+        </Button>
       </div>
 
       <AddChapterDialog
-        open={open}
-        onOpenChange={setOpen}
+        open={dialog.isOpen}
+        onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
         bookId={bookId}
-        onCreated={() => mutate()}
+        onCreated={handleChapterCreated}
       />
 
       <div className="rounded-2xl border">
@@ -67,34 +79,31 @@ export function ChaptersClient({
                 <TableCell colSpan={4}>Loading…</TableCell>
               </TableRow>
             )}
-            {data?.map((ch) => (
-              <TableRow key={ch.id}>
-                <TableCell>{ch.order}</TableCell>
-                <TableCell>{ch.title}</TableCell>
-                <TableCell>
-                  {ch.pageStart}-{ch.pageEnd}
-                </TableCell>
-                <TableCell className="flex gap-2">
-                  <Button variant="outline" asChild>
-                    <Link
-                      href={`/books/${bookId}/chapters/${
-                        ch.id
-                      }?bookTitle=${encodeURIComponent(bookTitle)}`}
-                    >
-                      To topics
-                    </Link>
-                  </Button>
-                  <Button variant="destructive" disabled>
-                    Remove
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {data && data.length === 0 && (
+            {!isLoading && chapters.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4}>No chapters</TableCell>
               </TableRow>
             )}
+            {!isLoading &&
+              chapters.map((ch) => (
+                <TableRow key={ch.id}>
+                  <TableCell>{ch.order}</TableCell>
+                  <TableCell>{ch.title}</TableCell>
+                  <TableCell>
+                    {ch.pageStart}-{ch.pageEnd}
+                  </TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button variant="outline" asChild>
+                      <Link href={`/books/${bookId}/chapters/${ch.id}`}>
+                        To topics
+                      </Link>
+                    </Button>
+                    <Button variant="destructive" disabled>
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>

@@ -42,7 +42,7 @@ export async function getSession(): Promise<Session | null> {
 
 export async function signup(input: SignupInput) {
   const { email, password, firstName, lastName } = input;
-  const exists = await userRepository.findByEmail(email);
+  const exists = await userRepository.findByEmailWithouthPw(email);
   if (exists) {
     throw new ConflictError("User with this email exists already.");
   }
@@ -83,12 +83,12 @@ export async function login(input: { email: string; password: string }) {
   const c = await cookies();
 
   c.set(COOKIE, token, sessionCookieOpts);
-
+  const { passwordHash, ...safeUser } = user;
   return {
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    id: user.id,
+    firstName: safeUser.firstName,
+    lastName: safeUser.lastName,
+    email: safeUser.email,
+    id: safeUser.id,
   };
 }
 

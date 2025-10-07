@@ -24,6 +24,17 @@ export const userRepository = {
       },
     }),
 
+  findByEmailWithouthPw: (email: string) => {
+    return prisma.user.findUnique({
+      where: { email },
+      select: {
+        firstName: true,
+        lastName: true,
+        id: true,
+      },
+    });
+  },
+
   // with password
   findByEmail: (email: string) =>
     prisma.user.findUnique({
