@@ -157,12 +157,21 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
   if (!filePath) throw new Error("Chapter.filePath is required");
 
   const raw = await extractPdfRangeText(filePath, from, to);
-
-  // GenCache
   const key = `quiz:${topicId}:${from}-${to}:${crypto
     .createHash("sha1")
     .update(raw)
     .digest("hex")}`;
+
+  // Check if questions already exist for this topic
+  const existingQuestions = await prisma.question.findMany({
+    where: { topicId },
+  });
+
+  if (existingQuestions.length > 0) {
+    return existingQuestions;
+  }
+
+  // Check cache for generation data
   const cached = await prisma.genCache.findUnique({ where: { key } });
   if (cached) {
     const payload = JSON.parse(cached.payload) as {
@@ -176,6 +185,7 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
     return writeQuestions(chapterId, topicId, payload.questions);
   }
 
+  console.time("openai");
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -185,6 +195,7 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
     response_format: { type: "json_object" },
     temperature: 0.4,
   });
+  console.timeEnd("openai");
 
   interface QuestionData {
     stem: string;

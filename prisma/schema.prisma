@@ -23,7 +23,7 @@ model Book {
   title     String
   author    String?
   fileUrl   String?
-  status    String    @default("uploaded")
+  pageCount Int?
   createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id])
   chapters  Chapter[]
