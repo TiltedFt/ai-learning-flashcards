@@ -171,9 +171,14 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
   if (!filePath) throw new Error("Chapter.filePath is required");
 
   const raw = await extractPdfRangeText(filePath, from, to);
+
+  const cleaned = raw
+    .replace(/\s+/g, " ") // Убираем множественные пробелы
+    .replace(/\n{3,}/g, "\n\n"); // Ограничиваем подряд идущие переводы строк до двух
+
   const key = `quiz:${topicId}:${from}-${to}:${crypto
     .createHash("sha1")
-    .update(raw)
+    .update(cleaned)
     .digest("hex")}`;
 
   const cached = await prisma.genCache.findUnique({ where: { key } });
@@ -195,7 +200,7 @@ export async function ensureTopicQuestions(chapterId: string, topicId: string) {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: prompt },
-        { role: "user", content: userPrompt(topic.title, raw) },
+        { role: "user", content: userPrompt(topic.title, cleaned) },
       ],
       response_format: { type: "json_object" },
       temperature: 0.4,
